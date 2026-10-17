@@ -68,13 +68,31 @@ static uint8_t ww_spot_color(dr_character c)
 /// Frames to let the final "WIN!" banner show before ending the mini-game
 static const int WW_VS_END_DELAY = 150;
 
-/* Each mini-game loads a savestate taken a couple frames after both players
- * confirmed their level on the VS setup screen. minigame_id is the level
- * slider index (0 = 1-1, 10 = 3-3, 20 = 5-5) used for the state name. */
+/// u8 -- 1P level slider index (0 = 1-1 ... 10 = 3-3 ... 20 = 5-5)
+static const dr_value_t WW_VS_LEVEL_1P = { 0x7B5D, DR_VALUE_TYPE_U8 };
+
+/// u8 -- 2P level slider index
+static const dr_value_t WW_VS_LEVEL_2P = { 0x7B5E, DR_VALUE_TYPE_U8 };
+
+/// u8 -- "Monster select" set used by both fields. The menu offers 0, 2-7.
+static const dr_value_t WW_VS_MONSTERS = { 0x7B5A, DR_VALUE_TYPE_U8 };
+
+/* All mini-games load one savestate taken a couple frames after both players
+ * confirmed on the VS setup screen; the boards are generated during the
+ * fade-in, so the level and monster set are poked right after load.
+ * minigame_id = (monster set << 5) | level slider index. */
+#define WW_ID(monsters, level) (((monsters) << 5) | (level))
+
 static const dr_mp_minigame_t WW_MINIGAMES[] = {
-  { "Wario's Woods: VS Lv. 1-1", DR_MINIGAME_DUEL, 0, 0x00, DR_NO_QUIRKS, DR_NO_FLAGS },
-  { "Wario's Woods: VS Lv. 3-3", DR_MINIGAME_DUEL, 10, 0x00, DR_NO_QUIRKS, DR_NO_FLAGS },
-  { "Wario's Woods: VS Lv. 5-5", DR_MINIGAME_DUEL, 20, 0x00, DR_NO_QUIRKS, DR_NO_FLAGS },
+  { "Wario's Woods: VS Lv. 1-1", DR_MINIGAME_DUEL, WW_ID(0, 0), 0x00, DR_NO_QUIRKS, DR_NO_FLAGS },
+  { "Wario's Woods: VS Lv. 3-3", DR_MINIGAME_DUEL, WW_ID(0, 10), 0x00, DR_NO_QUIRKS, DR_NO_FLAGS },
+  { "Wario's Woods: VS Lv. 5-5", DR_MINIGAME_DUEL, WW_ID(0, 20), 0x00, DR_NO_QUIRKS, DR_NO_FLAGS },
+  { "Wario's Woods: VS Monster Set 2", DR_MINIGAME_DUEL, WW_ID(2, 10), 0x00, DR_NO_QUIRKS, DR_NO_FLAGS },
+  { "Wario's Woods: VS Monster Set 3", DR_MINIGAME_DUEL, WW_ID(3, 10), 0x00, DR_NO_QUIRKS, DR_NO_FLAGS },
+  { "Wario's Woods: VS Monster Set 4", DR_MINIGAME_DUEL, WW_ID(4, 10), 0x00, DR_NO_QUIRKS, DR_NO_FLAGS },
+  { "Wario's Woods: VS Monster Set 5", DR_MINIGAME_DUEL, WW_ID(5, 10), 0x00, DR_NO_QUIRKS, DR_NO_FLAGS },
+  { "Wario's Woods: VS Monster Set 6", DR_MINIGAME_DUEL, WW_ID(6, 10), 0x00, DR_NO_QUIRKS, DR_NO_FLAGS },
+  { "Wario's Woods: VS Monster Set 7", DR_MINIGAME_DUEL, WW_ID(7, 10), 0x00, DR_NO_QUIRKS, DR_NO_FLAGS },
 
   { nullptr, DR_MINIGAME_INVALID, 0xFF, 0xFF, DR_NO_QUIRKS, DR_NO_FLAGS },
 };
@@ -97,9 +115,12 @@ void WariosWoods::doApplyGameData(const DrGameData &data)
   m_minigameFrames = 0;
   m_endFrames = 0;
 
-  const QByteArray state_name = QString("wariowoods_vs%1")
-    .arg(static_cast<unsigned>(data.minigame->minigame_id)).toLatin1();
-  m_retro->loadState(state_name.constData());
+  m_retro->loadState(state());
+
+  const int id = data.minigame->minigame_id;
+  m_retro->writeValue(id & 0x1F, WW_VS_LEVEL_1P);
+  m_retro->writeValue(id & 0x1F, WW_VS_LEVEL_2P);
+  m_retro->writeValue((id >> 5) & 0x07, WW_VS_MONSTERS);
 
   /* Randomize the boards from the shared dr_rand stream so netplay agrees */
   m_retro->writeValue(dr_rand() & 0xFF, WW_RNG_HI);

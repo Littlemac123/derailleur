@@ -14,7 +14,7 @@ public:
   dr_guest id() const override { return DR_GUEST_DKJRMATH; }
   dr_core coreId() const override { return DR_CORE_FCEUMM; }
   const char *rom() const override { return "Donkey Kong Jr. Math (USA, Europe).nes"; }
-  const char *state() const override { return "dkjrmath_a"; }
+  const char *state() const override { return "dkjrmath"; }
 
   const dr_mp_minigame_t *minigames() const override;
   dr_minigame_result_t minigameResult(unsigned index) override;

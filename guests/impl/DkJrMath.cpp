@@ -12,6 +12,9 @@ static const dr_value_t DKJM_MATCHED[2] = {
   { 0x00E5, DR_VALUE_TYPE_U8 }, { 0x00E6, DR_VALUE_TYPE_U8 }
 };
 
+/// u8 -- Game mode: 0 = Calculate A, 1 = Calculate B
+static const dr_value_t DKJM_MODE = { 0x00EF, DR_VALUE_TYPE_U8 };
+
 /// Apples needed to win; a match on the last apple ends the game
 static const int64_t DKJM_APPLES_NEEDED = 5;
 
@@ -99,7 +102,11 @@ void DkJrMath::doApplyGameData(const DrGameData &data)
   m_endFrames = 0;
   m_winnerSide = -1;
 
-  m_retro->loadState(data.minigame->minigame_id == 1 ? "dkjrmath_b" : "dkjrmath_a");
+  m_retro->loadState(state());
+
+  /* The state is 2 frames after starting Calculate A; the mode is still read
+   * from RAM, so poke it to pick Calculate B */
+  m_retro->writeValue(data.minigame->minigame_id == 1 ? 1 : 0, DKJM_MODE);
 
   /* Randomize targets/vines from the shared dr_rand stream so netplay agrees.
    * Force one bit so the state is never all zero. */

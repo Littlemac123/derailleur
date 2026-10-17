@@ -14,7 +14,7 @@ public:
   dr_guest id() const override { return DR_GUEST_WARIOSWOODS; }
   dr_core coreId() const override { return DR_CORE_FCEUMM; }
   const char *rom() const override { return "Wario's Woods (USA).nes"; }
-  const char *state() const override { return "wariowoods_vs0"; }
+  const char *state() const override { return "wariowoods"; }
 
   const dr_mp_minigame_t *minigames() const override;
   dr_minigame_result_t minigameResult(unsigned index) override;
